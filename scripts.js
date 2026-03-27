@@ -130,45 +130,17 @@ function showMenu(tab, el) {
   el.classList.add('active');
 }
 
-// ─── DATA-ANIMATE: FLY IN + FLY OUT ───
-function applyDelay(el) {
-  const d = el.dataset.delay;
-  el.style.transitionDelay = d ? d + 'ms' : '0ms';
-}
-
-const animObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    const el = entry.target;
-    if (entry.isIntersecting) {
-      applyDelay(el);
-      el.classList.remove('anim-out');
-      el.classList.add('anim-in');
-    } else {
-      // Only fly out if element has already flown in once
-      if (el.classList.contains('anim-in')) {
-        el.style.transitionDelay = '0ms';
-        el.classList.remove('anim-in');
-        el.classList.add('anim-out');
-      }
-    }
-  });
-}, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
-
-document.querySelectorAll('[data-animate]').forEach(el => {
-  animObserver.observe(el);
-});
-
-// Legacy .reveal support (for any elements not yet migrated)
+// ─── SCROLL REVEAL ───
 const reveals = document.querySelectorAll('.reveal');
-const revealObserver = new IntersectionObserver((entries) => {
+const observer = new IntersectionObserver((entries) => {
   entries.forEach((entry, i) => {
     if (entry.isIntersecting) {
       setTimeout(() => entry.target.classList.add('visible'), i * 60);
-      revealObserver.unobserve(entry.target);
+      observer.unobserve(entry.target);
     }
   });
 }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
-reveals.forEach(r => revealObserver.observe(r));
+reveals.forEach(r => observer.observe(r));
 
 // ─── NAVBAR: SHRINK + HIDE/SHOW ───
 let lastScroll = 0;
