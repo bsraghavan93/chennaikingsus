@@ -142,19 +142,56 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
 reveals.forEach(r => observer.observe(r));
 
-// ─── SMOOTH NAVBAR HIDE/SHOW ───
+// ─── NAVBAR: SHRINK + HIDE/SHOW ───
 let lastScroll = 0;
 const navbar = document.querySelector('.navbar');
+navbar.style.transition = 'transform 0.35s ease, padding 0.35s ease, background 0.35s, box-shadow 0.35s';
 window.addEventListener('scroll', () => {
   const current = window.scrollY;
-  if (current > lastScroll && current > 80) {
-    navbar.style.transform = 'translateY(-100%)';
-  } else {
-    navbar.style.transform = 'translateY(0)';
-  }
+  navbar.classList.toggle('scrolled', current > 60);
+  navbar.style.transform = (current > lastScroll && current > 100) ? 'translateY(-100%)' : 'translateY(0)';
   lastScroll = current;
 });
-navbar.style.transition = 'transform 0.3s ease';
+
+// ─── COUNTER ANIMATION ───
+function animateCounter(el) {
+  const text  = el.textContent.trim();
+  const num   = parseFloat(text.replace(/[^0-9.]/g, ''));
+  const suffix = text.replace(/[0-9.]/g, '');
+  if (isNaN(num)) return;
+  const duration = 1600;
+  const start    = performance.now();
+  const isDecimal = text.includes('.');
+  (function step(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased    = 1 - Math.pow(1 - progress, 3);
+    const current  = isDecimal ? (num * eased).toFixed(1) : Math.floor(num * eased);
+    el.textContent = current + suffix;
+    if (progress < 1) requestAnimationFrame(step);
+  })(start);
+}
+const counterObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      animateCounter(entry.target);
+      counterObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.5 });
+document.querySelectorAll('.about-stat-num').forEach(el => counterObserver.observe(el));
+
+// ─── STAGGER CHILDREN ───
+const staggerObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.querySelectorAll('.stagger-child').forEach((child, i) => {
+        setTimeout(() => child.classList.add('visible'), i * 100);
+      });
+      staggerObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.stagger-wrap').forEach(el => staggerObserver.observe(el));
 
 // ─── PARALLAX ───
 const parallaxBg = document.querySelector('.parallax-bg');
